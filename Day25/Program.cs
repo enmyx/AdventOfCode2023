@@ -17,39 +17,37 @@ namespace Day25
 
             var lines = input.Replace("\r\n", "\n").Split('\n').ToList();
 
-            int min = int.MaxValue;
-            var res = new Dictionary<int, int>();
-            for (int j = 0; j < 100; j++)
+            var initialNodes = new HashSet<string>();
+            var initialEdges = new List<(string, string)>();
+            foreach (var line in lines)
             {
-                var connections = new Dictionary<string, List<string>>();
-                var edges = new List<(string, string)>();
-                foreach (var line in lines)
+                var nodes = line.Split(':');
+                var source = nodes[0];
+                var targets = nodes[1].Trim().Split(' ');
+                if (!initialNodes.Contains(source))
+                    initialNodes.Add(source);
+                foreach (var target in targets)
                 {
-                    var nodes = line.Split(':');
-                    var source = nodes[0];
-                    var targets = nodes[1].Trim().Split(' ');
-                    if (!connections.ContainsKey(source))
-                        connections.Add(source, new List<string>());
-                    foreach (var target in targets)
-                    {
-                        edges.Add((source, target));
-                        connections[source].Add(target);
-                        if (!connections.ContainsKey(target))
-                            connections.Add(target, new List<string>());
-                        connections[target].Add(source);
-                    }
+                    initialEdges.Add((source, target));
+                    if (!initialNodes.Contains(target))
+                        initialNodes.Add(target);
                 }
+            }
 
-                while (connections.Count > 2)
+            int min = int.MaxValue;
+            int res = 0;
+            while (min > 3)
+            {
+                var nodes = new HashSet<string>(initialNodes);
+                var edges = new List<(string, string)>(initialEdges);
+
+                while (nodes.Count > 2)
                 {
                     var randomIndex = random.Next(0, edges.Count);
                     var randomEdge = edges[randomIndex];
                     edges.RemoveAt(randomIndex);
                     var firstVertex = randomEdge.Item1;
                     var secondVertex = randomEdge.Item2;
-
-                    //Console.WriteLine();
-                    //Console.WriteLine("Merging " + firstVertex + "-" + secondVertex);
 
                     var newNode = firstVertex + " " + secondVertex;
 
@@ -70,27 +68,25 @@ namespace Day25
                     }
 
                     edges.RemoveAll(e => (e.Item1 == firstVertex && e.Item2 == secondVertex)
-                    || (e.Item1 == secondVertex && e.Item2 == firstVertex));
+                                      || (e.Item1 == secondVertex && e.Item2 == firstVertex));
 
-                    connections.Add(newNode, new List<string>());
-                    connections.Remove(firstVertex);
-                    connections.Remove(secondVertex);
+                    nodes.Add(newNode);
+                    nodes.Remove(firstVertex);
+                    nodes.Remove(secondVertex);
                 }
 
-                int a = connections.First().Key.Split(' ').Length;
-                int b = connections.Last().Key.Split(' ').Length;
-                if (a == 1 || b == 1)
-                    continue;
-                Console.WriteLine(edges.Count);
+                int a = nodes.First().Split(' ').Length;
+                int b = nodes.Last().Split(' ').Length;
+
                 min = Math.Min(min, edges.Count);
-                res[edges.Count] = a * b;
+                res = a * b;
+                Console.WriteLine(edges.Count);
                 Console.WriteLine(a);
                 Console.WriteLine(b);
                 Console.WriteLine(a * b);
                 Console.WriteLine();
             }
-            Console.WriteLine(min);
-            Console.WriteLine(res[min]);
+            Console.WriteLine(res);
         }
     }
 }
